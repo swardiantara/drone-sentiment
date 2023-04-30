@@ -1,17 +1,17 @@
 rm -r cache_dir
-python train.py electra-base
+python finetune.py electra-base
 
 rm -r cache_dir
-python train.py bert
+python finetune.py bert
 
 rm -r cache_dir
-python train.py roberta
+python finetune.py roberta
 
 rm -r cache_dir
-python train.py distilbert
+python finetune.py distilbert
 
 rm -r cache_dir
-python train.py distilroberta
+python finetune.py distilroberta
 
 rm -r cache_dir
-python train.py xlnet
+python finetune.py xlnet
