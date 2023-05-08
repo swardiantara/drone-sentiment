@@ -108,7 +108,7 @@ def main():
     # Update the overall models' performance evaluation score
     if os.path.exists('overall_evaluation.csv'):
         eval_df = pd.read_csv('overall_evaluation.csv')
-        eval_df = eval_df.append(new_eval, ignore_index=True)
+        eval_df = pd.concat([eval_df, pd.DataFrame([new_eval])], ignore_index=True)
         eval_df.to_csv('overall_evaluation.csv', index=False)
     else:
         eval_df = pd.DataFrame(new_eval, index=[0])
