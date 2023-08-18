@@ -13,8 +13,8 @@ transformers_logger.setLevel(logging.WARNING)
 
 
 def load_dataset(path):
-    train_df = pd.read_csv('{}/train.csv'.format(path))
-    test_df = pd.read_csv('{}/test.csv'.format(path))
+    train_df = pd.read_csv('{}/fold_5_train.csv'.format(path))
+    test_df = pd.read_csv('{}/fold_5_test.csv'.format(path))
     return train_df, test_df
 
 
@@ -68,7 +68,7 @@ def evaluation_score(result):
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)
     f1_score = (2 * precision * recall) / (precision + recall)
-    specificity = tn / (tn + fp)
+    # specificity = tn / (tn + fp)
 
     return {
         "tp": tp,
@@ -79,13 +79,13 @@ def evaluation_score(result):
         "precision": round(precision, 3),
         "recall": round(recall, 3),
         "f1_score": round(f1_score, 3),
-        "specificity": round(specificity, 3)
+        # "specificity": round(specificity, 3)
     }
 
 
 def main():
     model_type = sys.argv[1]
-    device = True if torch.cuda.is_available() else False
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     train_df, test_df = load_dataset('dataset')
 
     train_args = get_model_args(model_type)
@@ -103,12 +103,13 @@ def main():
     result, model_outputs, wrong_predictions = model.eval_model(test_df)
     eval_score = evaluation_score(result)
     new_eval = {"Model": model_name, 'TP': eval_score['tp'], 'FP': eval_score['fp'], 'FN': eval_score['fn'], 'TN': eval_score['tn'], 'Accuracy': eval_score['accuracy'],
-                'Precision': eval_score['precision'], 'Recall': eval_score['recall'], 'F1': eval_score['f1_score'], 'Specificity': eval_score['specificity']}
+                'Precision': eval_score['precision'], 'Recall': eval_score['recall'], 'F1': eval_score['f1_score']}
 
     # Update the overall models' performance evaluation score
     if os.path.exists('overall_evaluation.csv'):
         eval_df = pd.read_csv('overall_evaluation.csv')
-        eval_df = pd.concat([eval_df, pd.DataFrame([new_eval])], ignore_index=True)
+        eval_df = pd.concat(
+            [eval_df, pd.DataFrame([new_eval])], ignore_index=True)
         eval_df.to_csv('overall_evaluation.csv', index=False)
     else:
         eval_df = pd.DataFrame(new_eval, index=[0])
