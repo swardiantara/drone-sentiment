@@ -55,6 +55,8 @@ def get_model_args(model_type):
     args.save_eval_checkpoints = False
     args.train_batch_size = 8
     args.eval_batch_size = 8
+    args.use_multiprocessing = False,
+    args.use_multiprocessing_for_evaluation = False
 
     return args
 
