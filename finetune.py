@@ -132,7 +132,7 @@ def main():
         eval_df.to_excel(os.path.join('outputs', 'overall_evaluation.xlsx'), index=False)
 
     # Save the predicted labels to perform error analysis
-    predictions, raw_outputs = model.predict(test_df['text'])
+    predictions, raw_outputs = model.predict(test_df['text'].to_list())
     test_df['preds'] = predictions
     test_df.to_excel(os.path.join(args.output_dir, f"prediction_{args.model_path}.xlsx"))
 
