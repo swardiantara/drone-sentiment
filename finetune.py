@@ -13,6 +13,7 @@ from simpletransformers.classification import ClassificationModel, Classificatio
 logging.basicConfig(level=logging.INFO)
 transformers_logger = logging.getLogger("transformers")
 transformers_logger.setLevel(logging.WARNING)
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 def init_args():
