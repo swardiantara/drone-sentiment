@@ -76,55 +76,62 @@ def load_dataset(path):
     test_df = pd.read_csv('{}/test_new.csv'.format(path))
     return train_df, test_df
 
+def main():
+    # initialization
+    args = init_args()
+    seed_everything(args.seed)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# initialization
-args = init_args()
-seed_everything(args.seed)
+    # Read data
+    train_df, test_df = load_dataset('dataset')
+    train_df.columns = ["text", "labels"]
+    test_df.columns = ["text", "labels"]
 
-# Read data
-train_df, test_df = load_dataset('dataset')
-train_df.columns = ["text", "labels"]
-test_df.columns = ["text", "labels"]
+    # Define model arguments
+    model_args = {
+        'num_train_epochs': 5,
+        'learning_rate': 2e-5,
+        'overwrite_output_dir': True,
+        'train_batch_size': 16,
+        'eval_batch_size': 16,
+        'output_dir': args.output_dir,
+        'save_steps': -1,
+        'save_model_every_epoch': False,
+        'use_multiprocessing': False
+    }
 
-# Define model arguments
-model_args = {
-    'num_train_epochs': 5,
-    'learning_rate': 2e-5,
-    'overwrite_output_dir': True,
-    'train_batch_size': 16,
-    'eval_batch_size': 16,
-    'output_dir': args.output_dir,
-    'save_steps': -1,
-    'save_model_every_epoch': False
-}
+    # Create a ClassificationModel
+    model = ClassificationModel(
+        args.model_type,        # Model type (can be roberta, xlnet, etc.)
+        args.model_name_or_path,    # Model name
+        args=model_args,
+        use_cuda=device
+    )
 
-# Create a ClassificationModel
-model = ClassificationModel(
-    args.model_type,        # Model type (can be roberta, xlnet, etc.)
-    args.model_name_or_path,    # Model name
-    args=model_args
-)
+    # Train the model
+    model.train_model(train_df, show_running_loss=True)
 
-# Train the model
-model.train_model(train_df)
+    # Evaluate the model
+    result, model_outputs, wrong_predictions = model.eval_model(test_df)
+    eval_score = evaluation_score(result)
+    new_eval = {"Model": args.model_path, 'TP': eval_score['tp'], 'FP': eval_score['fp'], 'FN': eval_score['fn'], 'TN': eval_score['tn'], 'Accuracy': eval_score['accuracy'],
+                'Precision': eval_score['precision'], 'Recall': eval_score['recall'], 'F1': eval_score['f1_score']}
 
-# Evaluate the model
-result, model_outputs, wrong_predictions = model.eval_model(test_df)
-eval_score = evaluation_score(result)
-new_eval = {"Model": args.model_path, 'TP': eval_score['tp'], 'FP': eval_score['fp'], 'FN': eval_score['fn'], 'TN': eval_score['tn'], 'Accuracy': eval_score['accuracy'],
-            'Precision': eval_score['precision'], 'Recall': eval_score['recall'], 'F1': eval_score['f1_score']}
+    # Update the overall models' performance evaluation score
+    if os.path.exists(os.path.join('outputs', 'overall_evaluation.xlsx')):
+        eval_df = pd.read_excel(os.path.join('outputs', 'overall_evaluation.xlsx'))
+        eval_df = pd.concat(
+            [eval_df, pd.DataFrame([new_eval])], ignore_index=True)
+        eval_df.to_excel(os.path.join('outputs', 'overall_evaluation.xlsx'), index=False)
+    else:
+        eval_df = pd.DataFrame(new_eval, index=[0])
+        eval_df.to_excel(os.path.join('outputs', 'overall_evaluation.xlsx'), index=False)
 
-# Update the overall models' performance evaluation score
-if os.path.exists(os.path.join('outputs', 'overall_evaluation.xlsx')):
-    eval_df = pd.read_excel(os.path.join('outputs', 'overall_evaluation.xlsx'))
-    eval_df = pd.concat(
-        [eval_df, pd.DataFrame([new_eval])], ignore_index=True)
-    eval_df.to_excel(os.path.join('outputs', 'overall_evaluation.xlsx'), index=False)
-else:
-    eval_df = pd.DataFrame(new_eval, index=[0])
-    eval_df.to_excel(os.path.join('outputs', 'overall_evaluation.xlsx'), index=False)
+    # Save the predicted labels to perform error analysis
+    predictions, raw_outputs = model.predict(test_df['text'])
+    test_df['preds'] = predictions
+    test_df.to_excel(os.path.join(args.output_dir, f"prediction_{args.model_path}.xlsx"))
 
-# Save the predicted labels to perform error analysis
-predictions, raw_outputs = model.predict(test_df['text'])
-test_df['preds'] = predictions
-test_df.to_excel(os.path.join(args.output_dir, f"prediction_{args.model_path}.xlsx"))
+
+if __name__ == "__main__":
+    main()
