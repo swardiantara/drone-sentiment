@@ -98,7 +98,10 @@ def main():
         'output_dir': args.output_dir,
         'save_steps': -1,
         'save_model_every_epoch': False,
-        'use_multiprocessing': False
+        'use_multiprocessing': False,
+        'use_multiprocessing_for_evaluation': False,
+        'multiprocessing_chunksize': 1,
+        'dataloader_num_workers': 1
     }
 
     # Create a ClassificationModel
