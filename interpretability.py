@@ -28,10 +28,10 @@ def init_args():
 
 
 class ModelWrapper(nn.Module):
-    def __init__(self, model: AutoModelForSequenceClassification):
+    def __init__(self, model: AutoModelForSequenceClassification, tokenizer: AutoTokenizer):
         super().__init__()
         self.model = model
-        self.tokenizer = AutoTokenizer.from_pretrained(model.config.name_or_path)
+        self.tokenizer = tokenizer
         
     def forward(self, inputs):
         # Forward pass returning logits
@@ -99,8 +99,9 @@ def visualize_attributions(word_attributions):
 def main():
     args = init_args()
     # Assuming you have your SimpleTransformers model as 'model'
-    model = AutoModelForSequenceClassification(args.output_dir)
-    wrapped_model = ModelWrapper(model)
+    tokenizer = AutoTokenizer.from_pretrained(args.output_dir)
+    model = AutoModelForSequenceClassification.from_pretrained(args.output_dir)
+    wrapped_model = ModelWrapper(tokenizer, model)
     
     # Example text for analysis
     texts = [
