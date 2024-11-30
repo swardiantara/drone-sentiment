@@ -51,7 +51,7 @@ class ModelWrapper(nn.Module):
         probs = torch.softmax(outputs, dim=1)
         return probs.detach().numpy()
 
-def analyze_attribution(model_wrapper, text, target_class=1):
+def analyze_attribution(model_wrapper: ModelWrapper, text: str, target_class=1):
     """
     Perform attribution analysis using Integrated Gradients
     """
