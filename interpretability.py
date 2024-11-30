@@ -119,3 +119,6 @@ def main():
         # Visualize results
         visualize_attributions(word_attributions)
     
+
+if __name__ == "__main__":
+    main()
